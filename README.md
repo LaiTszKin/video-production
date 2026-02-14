@@ -1,13 +1,14 @@
 # Video Production Skill
 
-A Codex skill for end-to-end text-to-video production. It turns text into storyboarded, narrated videos with subtitle overlays and renders final MP4 output via Remotion.
+A Codex skill for end-to-end text-to-video production. It supports both single long videos and multi-clip short-video outputs.
 
 ## Capabilities
 
 - Plans scene prompts from source text in narrative order.
 - Generates storyboard images with orientation-aware aspect ratio.
-- Produces narration audio, timeline JSON, and SRT subtitles.
-- Composes and renders subtitle video with Remotion best practices.
+- Produces full narration audio, timeline JSON, and SRT subtitles.
+- In multi-clip mode, splits full narration/subtitles by user-defined clip duration.
+- Composes and renders subtitle video(s) with Remotion best practices.
 
 ## Required Dependency Skills
 
@@ -20,14 +21,18 @@ A Codex skill for end-to-end text-to-video production. It turns text into storyb
 - `project_dir`
 - source text (raw text or a text file)
 - `content_name`
-- target video duration
 - orientation (`vertical` or `horizontal`)
+- delivery mode (`single` or `multi`)
+- target video duration (for `single`)
+- segment duration per clip (for `multi`)
 
 ## Output Contract
 
 - Storyboard folder: `<project_dir>/pictures/<content_name>/`
 - Narration assets: `<project_dir>/audio/<content_name>/`
-- Final video: `<project_dir>/video/<content_name>.mp4`
+- Single mode video: `<project_dir>/video/<content_name>.mp4`
+- Multi mode videos: `<project_dir>/video/<content_name>/<content_name>-part-001.mp4` (ordered series)
+- Multi mode manifest: `<project_dir>/video/<content_name>/segments.json`
 
 ## Files
 
@@ -39,5 +44,5 @@ A Codex skill for end-to-end text-to-video production. It turns text into storyb
 In Codex, call the skill directly:
 
 ```text
-Use $video-production to convert text into a narrated subtitle video.
+Use $video-production to convert text into one long video or multiple short narrated subtitle clips.
 ```
