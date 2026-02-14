@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Production"
+  short_description: "Create narrated subtitle videos from text and storyboard images"
+  default_prompt: "Use $video-production to convert text into storyboard images, generate voice + subtitles, and build a Remotion video. Ask for missing target duration and orientation (vertical or horizontal) before rendering."
