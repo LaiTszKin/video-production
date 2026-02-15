@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.3] - 2026-02-15
+
+### Added
+- Require preserving the Remotion workspace by default so users can revise and re-render later.
+- Add Remotion workspace path to output locations and output contract.
+
+### Changed
+- Update agent default prompt to explicitly keep the Remotion project unless cleanup is requested.
+
 ## [0.1.2] - 2026-02-15
 
 ### Added

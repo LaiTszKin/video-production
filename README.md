@@ -9,6 +9,7 @@ A Codex skill for end-to-end text-to-video production. It supports both single l
 - Produces full narration audio, timeline JSON, and SRT subtitles.
 - In multi-clip mode, splits full narration/subtitles by user-defined clip duration.
 - Composes and renders subtitle video(s) with Remotion best practices.
+- Preserves the Remotion project by default for future edits and re-rendering.
 - Enforces one unified adaptive subtitle strategy across all rendered videos.
 - Derives subtitle text color and depth from image color elements to keep captions readable.
 - Keeps subtitle timing aligned cue-by-cue with narration (no all-at-once captions).
@@ -37,6 +38,7 @@ A Codex skill for end-to-end text-to-video production. It supports both single l
 - Subtitle contrast report: `<project_dir>/video/<content_name>/subtitle-contrast-report.json`
 - Single mode video: `<project_dir>/video/<content_name>.mp4`
 - Multi mode videos: `<project_dir>/video/<content_name>/<content_name>-part-001.mp4` (ordered series)
+- Remotion workspace (kept by default): `<project_dir>/video/<content_name>/remotion/`
 - Multi mode manifest: `<project_dir>/video/<content_name>/segments.json`
 
 ## Files
