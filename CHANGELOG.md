@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.2] - 2026-02-15
+
+### Added
+- Require subtitle color and depth to adapt to image color elements in the subtitle-safe area.
+- Add subtitle readability verification with minimum contrast target (`4.5:1`) and fallback backing plate rule.
+- Add `subtitle-contrast-report.json` to the output contract for traceable subtitle style decisions.
+
+### Changed
+- Replace fixed subtitle text/stroke/shadow defaults with an adaptive color/depth strategy.
+- Update README and agent default prompt to emphasize image-aware subtitle readability behavior.
+
 ## [0.1.1] - 2026-02-15
 
 ### Added

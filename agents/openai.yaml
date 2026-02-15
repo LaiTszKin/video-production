@@ -1,4 +1,4 @@
 interface:
   display_name: "Video Production"
-  short_description: "Create narrated subtitle videos with unified style and cue-level subtitle sync (single or multi-clip)"
-  default_prompt: "Use $video-production to convert text into storyboard images, generate full voice + subtitles, and render one long video or multiple short clips with a unified subtitle format. Subtitles must follow spoken timing cue-by-cue (not all shown at frame 0). Ask for missing orientation, delivery mode (single/multi), and required duration values before rendering."
+  short_description: "Create narrated subtitle videos with adaptive subtitle readability and cue-level sync (single or multi-clip)"
+  default_prompt: "Use $video-production to convert text into storyboard images, generate full voice + subtitles, and render one long video or multiple short clips with a unified adaptive subtitle strategy. Subtitle color and depth must be derived from image color elements to ensure readability, and subtitles must follow spoken timing cue-by-cue (not all shown at frame 0). Ask for missing orientation, delivery mode (single/multi), and required duration values before rendering."

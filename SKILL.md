@@ -44,8 +44,8 @@ After all required inputs are collected, pause before production and ask for exp
 
 ## Subtitle Format Standard (Required for all videos)
 
-Apply one unified subtitle style to every video output (`single` and `multi`).
-Unless user explicitly requests overrides, do not change subtitle style per clip or per video.
+Apply one unified subtitle strategy to every video output (`single` and `multi`).
+Unless user explicitly requests overrides, do not switch to a different subtitle strategy per clip or per video.
 
 Style profile:
 
@@ -57,14 +57,25 @@ Style profile:
 - font weight: `700`
 - font size: `64px` (`vertical`), `56px` (`horizontal`)
 - line height: `1.25`
-- text color: `#FFFFFF`
-- stroke: `rgba(0,0,0,0.92)` with width `6px` (`vertical`) / `4px` (`horizontal`)
-- shadow: `0 2px 10px rgba(0,0,0,0.45)`
+- color mode: `adaptive` (derive subtitle color from image color elements in subtitle-safe area)
+- color sampling region: bottom `35%` of frame and center `80%` width
+- contrast target: subtitle/background contrast ratio must be `>= 4.5:1`
+- fallback text colors: `#FFFFFF` and `#111111`
+- depth mode: `adaptive` (stroke + shadow respond to sampled luminance and color complexity)
+- stroke: auto light/dark polarity, baseline width `6px` (`vertical`) / `4px` (`horizontal`), up to `8px` / `6px` on noisy backgrounds
+- shadow: baseline `0 2px 10px rgba(0,0,0,0.45)`, increase blur/opacity when local contrast risk is high
 
 Implementation rules:
 
 - Save subtitle style config to `<project_dir>/video/<content_name>/subtitle-style.json`.
+- Save subtitle contrast decisions to `<project_dir>/video/<content_name>/subtitle-contrast-report.json`.
 - Use the same style config for full video and all segmented clips.
+- For each subtitle cue (or caption page), evaluate a matched frame/time slice before rendering and decide fill/stroke/shadow from sampled image colors.
+- Color/depth decision contract:
+  - extract dominant hue + average luminance + local contrast variance from the sampling region.
+  - generate text color candidates from sampled dominant hue (with readability adjustment) plus fallback colors.
+  - pick the highest-contrast candidate; if all candidates are below `4.5:1`, add a safety backing plate (semi-transparent dark/light box) behind text.
+  - tune stroke/shadow intensity from luminance + variance (higher complexity => stronger depth).
 - If user asks for style changes, apply the same changed style to every output in that job.
 - Timing contract:
   - `single`: convert each SRT cue to its own frame range using `startFrame = floor(startMs / 1000 * fps)` and `endFrame = ceil(endMs / 1000 * fps)`.
@@ -164,6 +175,7 @@ Common composition settings:
 - `fps = 30`
 - subtitles rendered as overlay captions with the unified subtitle style profile
 - render subtitles by cue timing (cue-by-cue visibility), not by static full-text overlay
+- apply adaptive subtitle color/depth per cue based on matched image color analysis; do not hardcode a single fixed text color for all scenes
 
 Render rules:
 
@@ -171,6 +183,7 @@ Render rules:
 - `multi`: for each segment, use matched scene images + segmented audio + segmented SRT, then render one MP4 per segment with the same unified subtitle style.
 - In Remotion, each subtitle cue must be rendered in its own `Sequence` (or equivalent frame-gated visibility) based on parsed SRT timestamps.
 - If all cues appear near frame `0`, treat as a sync bug and fix before final delivery.
+- If subtitle contrast drops below `4.5:1` in sampled subtitle-safe area, treat as readability bug and fix before final delivery.
 
 Output location:
 
@@ -190,8 +203,10 @@ Return absolute paths for:
 - full narration audio file
 - full subtitle SRT file
 - subtitle style config file
+- subtitle contrast report file
 - final rendered MP4 file (`single`) or ordered MP4 clip list (`multi`)
 - segment manifest file (`multi` only)
 
 Also report whether duration requirements are satisfied (`single`: total duration, `multi`: per-clip duration + remainder clip).
 Also report subtitle sync verification result (first/middle/last cue timing check against narration timeline).
+Also report subtitle readability verification result (contrast checks and fallback usage summary).

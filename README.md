@@ -9,7 +9,8 @@ A Codex skill for end-to-end text-to-video production. It supports both single l
 - Produces full narration audio, timeline JSON, and SRT subtitles.
 - In multi-clip mode, splits full narration/subtitles by user-defined clip duration.
 - Composes and renders subtitle video(s) with Remotion best practices.
-- Enforces one unified subtitle style profile across all rendered videos.
+- Enforces one unified adaptive subtitle strategy across all rendered videos.
+- Derives subtitle text color and depth from image color elements to keep captions readable.
 - Keeps subtitle timing aligned cue-by-cue with narration (no all-at-once captions).
 
 ## Required Dependency Skills
@@ -33,6 +34,7 @@ A Codex skill for end-to-end text-to-video production. It supports both single l
 - Storyboard folder: `<project_dir>/pictures/<content_name>/`
 - Narration assets: `<project_dir>/audio/<content_name>/`
 - Subtitle style profile: `<project_dir>/video/<content_name>/subtitle-style.json`
+- Subtitle contrast report: `<project_dir>/video/<content_name>/subtitle-contrast-report.json`
 - Single mode video: `<project_dir>/video/<content_name>.mp4`
 - Multi mode videos: `<project_dir>/video/<content_name>/<content_name>-part-001.mp4` (ordered series)
 - Multi mode manifest: `<project_dir>/video/<content_name>/segments.json`
