@@ -185,10 +185,18 @@ Render rules:
 - If all cues appear near frame `0`, treat as a sync bug and fix before final delivery.
 - If subtitle contrast drops below `4.5:1` in sampled subtitle-safe area, treat as readability bug and fix before final delivery.
 
+Remotion project retention (required):
+
+- Default Remotion workspace path: `<project_dir>/video/<content_name>/remotion/`.
+- Unless the user explicitly asks to remove it, keep the Remotion project after rendering for later edits.
+- Do not delete Remotion source files, config files, subtitle inputs, or composition code by default.
+- If user requests revisions, update and re-render from the preserved Remotion project when possible.
+
 Output location:
 
 - `single`: `<project_dir>/video/<content_name>.mp4`
 - `multi`: `<project_dir>/video/<content_name>/<content_name>-part-001.mp4` (ordered series)
+- remotion workspace (kept by default): `<project_dir>/video/<content_name>/remotion/`
 
 Duration rules:
 
@@ -205,6 +213,7 @@ Return absolute paths for:
 - subtitle style config file
 - subtitle contrast report file
 - final rendered MP4 file (`single`) or ordered MP4 clip list (`multi`)
+- remotion workspace directory (preserved unless user requested cleanup)
 - segment manifest file (`multi` only)
 
 Also report whether duration requirements are satisfied (`single`: total duration, `multi`: per-clip duration + remainder clip).
