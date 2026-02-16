@@ -1,112 +1,91 @@
 ---
 name: video-production
-description: Orchestrate text-to-video production with explicit dependencies on docs-to-voice, openai-text-to-image-storyboard, and remotion-best-practices. Supports single long video and multi-clip short-video output by generating full narration and images first, then splitting audio to user-defined clip length.
+description: Generate videos by following user instructions and invoking related skills only when needed (`openai-text-to-image-storyboard`, `docs-to-voice`, `remotion-best-practices`). Use when users want text or existing assets turned into rendered videos, proactively ask interactive clarification questions whenever required information is missing (for example subtitle style), and require plan document confirmation before generation.
 ---
 
 # Video Production
 
-## Dependency Contract (Required)
+## Core Rules
 
-Always run this workflow with these three skills:
+1. Follow user instructions first. Do not force a fixed pipeline.
+2. Call only relevant skills for missing work:
+   - `openai-text-to-image-storyboard`: generate storyboard images when user did not provide usable visuals.
+   - `docs-to-voice`: generate narration/timeline/SRT when user did not provide audio or subtitles.
+   - `remotion-best-practices`: compose and render the final video output.
+3. Before any asset generation or rendering, create a plan markdown in `<project_dir>/docs/plans/` and wait for explicit user confirmation.
+4. Never ask the user whether to output a single video or multiple clips.
+   - If the user explicitly asks for clips/parts, produce multi-clip output.
+   - Otherwise default to one full video.
+5. Keep Remotion project files unless the user explicitly asks for cleanup.
+6. Keep git repositories clean by ensuring Remotion dependency/build/cache artifacts are ignored.
 
-1. `openai-text-to-image-storyboard` (generate storyboard images)
-2. `docs-to-voice` (generate narration audio + timeline + SRT)
-3. `remotion-best-practices` (compose and render subtitle video)
+## Interactive Clarification (Required)
 
-If any dependency is unavailable, stop and report which dependency is missing.
+Before running generation commands, check whether details are sufficient. If not, ask concise targeted questions and wait for user replies.
+Do not guess preference-sensitive options.
 
-## Required Inputs
+Prioritize asking these missing items:
 
-Collect these inputs before production:
+- subtitle style (font, size, color, stroke/background, position, max lines)
+- orientation/aspect ratio or exact resolution
+- narration language/voice tone (if narration must be generated)
+- duration constraints (total duration, or clip duration only when the user requested clips)
+- visual style keywords (if storyboard images must be generated)
+- output location / filename rules when not obvious
+
+Ask only the minimum set required to unblock progress.
+
+## Inputs to Collect
+
+Collect only what is needed for the requested job (not everything by default):
 
 - `project_dir`
-- source text (raw text or a text file)
-- `content_name` (used in output paths)
-- orientation (`vertical` or `horizontal`)
-- delivery mode (`single` or `multi`)
-- target video duration (required for `single`)
-- segment duration per clip (required for `multi`, for example `30s` or `60s`)
-
-Do not guess orientation, delivery mode, or duration values.
-
-If orientation is missing, ask whether the video should be vertical or horizontal.
-If delivery mode is missing, ask whether user wants one full video (`single`) or multiple short clips (`multi`).
-If `single` duration is missing, ask for target duration first.
-If `multi` segment duration is missing, ask for the clip duration first.
-
-## User Confirmation Gate (Required)
-
-After all required inputs are collected, pause before production and ask for explicit user confirmation.
-
-- Provide a concise preflight summary (orientation, delivery mode, duration settings, and planned output paths).
-- Do not start scene planning, image generation, audio generation, segmentation, or rendering until user explicitly confirms to proceed.
-- If user changes any requirement, update the summary and request confirmation again.
-
-## Subtitle Format Standard (Required for all videos)
-
-Apply one unified subtitle strategy to every video output (`single` and `multi`).
-Unless user explicitly requests overrides, do not switch to a different subtitle strategy per clip or per video.
-
-Style profile:
-
-- source: use generated SRT timing directly; do not re-time subtitle timestamps.
-- language: keep original subtitle language; do not auto-translate.
-- layout: max `2` lines, centered, bottom offset `8%` of frame height.
-- line width: max `18` full-width chars (or `36` half-width chars) per line.
-- font family: `Noto Sans TC, PingFang TC, Microsoft JhengHei, sans-serif`
-- font weight: `700`
-- font size: `64px` (`vertical`), `56px` (`horizontal`)
-- line height: `1.25`
-- color mode: `adaptive` (derive subtitle color from image color elements in subtitle-safe area)
-- color sampling region: bottom `35%` of frame and center `80%` width
-- contrast target: subtitle/background contrast ratio must be `>= 4.5:1`
-- fallback text colors: `#FFFFFF` and `#111111`
-- depth mode: `adaptive` (stroke + shadow respond to sampled luminance and color complexity)
-- stroke: auto light/dark polarity, baseline width `6px` (`vertical`) / `4px` (`horizontal`), up to `8px` / `6px` on noisy backgrounds
-- shadow: baseline `0 2px 10px rgba(0,0,0,0.45)`, increase blur/opacity when local contrast risk is high
-
-Implementation rules:
-
-- Save subtitle style config to `<project_dir>/video/<content_name>/subtitle-style.json`.
-- Save subtitle contrast decisions to `<project_dir>/video/<content_name>/subtitle-contrast-report.json`.
-- Use the same style config for full video and all segmented clips.
-- For each subtitle cue (or caption page), evaluate a matched frame/time slice before rendering and decide fill/stroke/shadow from sampled image colors.
-- Color/depth decision contract:
-  - extract dominant hue + average luminance + local contrast variance from the sampling region.
-  - generate text color candidates from sampled dominant hue (with readability adjustment) plus fallback colors.
-  - pick the highest-contrast candidate; if all candidates are below `4.5:1`, add a safety backing plate (semi-transparent dark/light box) behind text.
-  - tune stroke/shadow intensity from luminance + variance (higher complexity => stronger depth).
-- If user asks for style changes, apply the same changed style to every output in that job.
-- Timing contract:
-  - `single`: convert each SRT cue to its own frame range using `startFrame = floor(startMs / 1000 * fps)` and `endFrame = ceil(endMs / 1000 * fps)`.
-  - `multi`: after clipping by segment window, rebase subtitle time to segment-local time (`localMs = globalMs - segmentStartMs`) before converting to frames.
-  - Never render all subtitle lines at frame `0`; each cue must keep its own time window.
+- `content_name`
+- final transcript text used for narration/subtitles
+- source script/text (unless the user provides complete audio + subtitles)
+- user-provided assets (images, audio, subtitles, branding)
+- output requirements from user instructions
 
 ## Workflow
 
-### 1) Scene planning
+### 1) Read user intent and choose skill calls
 
-- Convert the source text into scene prompts in narrative order.
-- Keep scene-to-text alignment so each later audio segment can be paired with the right scene images.
-- Save prompts JSON to `<project_dir>/pictures/<content_name>/prompts.json` using this schema:
+Create a concise execution checklist:
 
-```json
-[
-  {
-    "title": "scene title",
-    "prompt": "cinematic visual prompt"
-  }
-]
-```
+- what the user already provided
+- what still needs generation
+- which dependency skills will be called
+- what will be skipped
 
-### 2) Generate full image set (`openai-text-to-image-storyboard`)
+### 2) Create production plan markdown and wait for confirmation
 
-Map orientation to aspect ratio:
+Before generating images/audio/subtitles/video:
+
+- create directory `<project_dir>/docs/plans/` if missing
+- create a plan file named `<YYYY-MM-DD>-<content_name>.md`
+- load the reference template at `references/plan-template.md`
+- copy the template into the plan file first, then fill it
+- use local date for `YYYY-MM-DD`; sanitize `content_name` for filename safety
+- include at least these sections:
+  - `## Video Transcripts`
+  - `## Images To Generate`
+- in `Video Transcripts`, include the transcript content that will be used for narration/subtitles
+- in `Images To Generate`, list each image that still needs generation (scene id or order + prompt/description + intended usage)
+- replace all square-bracket placeholders with concrete content
+- remove all square-bracket placeholder/instruction text before sharing the plan for confirmation
+- return the absolute plan file path to the user and ask for explicit confirmation
+- do not run generation/render commands until user confirms the plan document
+
+### 3) Generate missing visuals (if needed)
+
+When visuals are missing, use `openai-text-to-image-storyboard`.
+
+Aspect ratio mapping:
 
 - `vertical` -> `9:16`
 - `horizontal` -> `16:9`
 
-Run:
+Command:
 
 ```bash
 python /Users/tszkinlai/.codex/skills/openai-text-to-image-storyboard/scripts/generate_storyboard_images.py \
@@ -117,16 +96,9 @@ python /Users/tszkinlai/.codex/skills/openai-text-to-image-storyboard/scripts/ge
   --aspect-ratio <9:16|16:9>
 ```
 
-Expected output:
+### 4) Generate missing narration/subtitles (if needed)
 
-- `<project_dir>/pictures/<content_name>/*.png`
-- `<project_dir>/pictures/<content_name>/storyboard.json`
-
-### 3) Generate full narration and subtitle files (`docs-to-voice`)
-
-Generate one complete narration from the full source text first. Do not generate per-segment narration.
-
-Use raw text or an input file:
+When narration or subtitle assets are missing, use `docs-to-voice`.
 
 ```bash
 python /Users/tszkinlai/.codex/skills/docs-to-voice/scripts/docs_to_voice.py \
@@ -137,31 +109,13 @@ python /Users/tszkinlai/.codex/skills/docs-to-voice/scripts/docs_to_voice.py \
 
 Expected output under `<project_dir>/audio/<content_name>/`:
 
-- full narration audio (`.aiff/.wav/.mp3` depends on mode)
-- `<audio_name>.timeline.json`
-- `<audio_name>.srt`
+- narration audio
+- timeline JSON
+- SRT subtitle file
 
-### 4) Segment preparation (only when `delivery mode = multi`)
+### 5) Compose and render video (`remotion-best-practices`)
 
-- Split the full narration audio into clips by user-defined segment duration.
-- Split subtitles with the same boundaries to preserve caption sync.
-- Build a segment manifest at `<project_dir>/video/<content_name>/segments.json`.
-- Map each segment to matching scene images by timeline/text alignment. Do not pair images randomly.
-- For each segment `[segmentStartMs, segmentEndMs)`:
-  - keep only subtitle cues that overlap the segment window.
-  - clamp cue boundaries to the segment window.
-  - rebase kept cues to segment-local time (`0` to `segmentDurationMs`) before saving `segment-xxx.srt`.
-  - drop cues with non-positive duration after clamping.
-
-Recommended segment assets:
-
-- `<project_dir>/audio/<content_name>/segments/segment-001.<ext>`
-- `<project_dir>/audio/<content_name>/segments/segment-001.srt`
-- `<project_dir>/video/<content_name>/segments.json`
-
-### 5) Build and render Remotion video(s) (`remotion-best-practices`)
-
-Before implementation, load these dependency references:
+Always load and follow:
 
 - `rules/compositions.md`
 - `rules/audio.md`
@@ -169,53 +123,48 @@ Before implementation, load these dependency references:
 - `rules/import-srt-captions.md`
 - `rules/display-captions.md`
 
-Common composition settings:
-
-- size: `1080x1920` for vertical, `1920x1080` for horizontal
-- `fps = 30`
-- subtitles rendered as overlay captions with the unified subtitle style profile
-- render subtitles by cue timing (cue-by-cue visibility), not by static full-text overlay
-- apply adaptive subtitle color/depth per cue based on matched image color analysis; do not hardcode a single fixed text color for all scenes
-
 Render rules:
 
-- `single`: use full image sequence + full narration audio + full SRT, then render one MP4 with the unified subtitle style.
-- `multi`: for each segment, use matched scene images + segmented audio + segmented SRT, then render one MP4 per segment with the same unified subtitle style.
-- In Remotion, each subtitle cue must be rendered in its own `Sequence` (or equivalent frame-gated visibility) based on parsed SRT timestamps.
-- If all cues appear near frame `0`, treat as a sync bug and fix before final delivery.
-- If subtitle contrast drops below `4.5:1` in sampled subtitle-safe area, treat as readability bug and fix before final delivery.
+- apply user-defined subtitle style to all outputs in the same job
+- if subtitle style is missing, ask first (do not silently hardcode)
+- render subtitles cue-by-cue by SRT timing (never all cues at frame `0`)
+- `single` output: render one full MP4
+- `multi` output: only when the user requested clips; split by user rule and render one MP4 per clip
 
-Remotion project retention (required):
+### 6) Keep reusable project artifacts
 
-- Default Remotion workspace path: `<project_dir>/video/<content_name>/remotion/`.
-- Unless the user explicitly asks to remove it, keep the Remotion project after rendering for later edits.
-- Do not delete Remotion source files, config files, subtitle inputs, or composition code by default.
-- If user requests revisions, update and re-render from the preserved Remotion project when possible.
+Default workspace:
 
-Output location:
+- `<project_dir>/video/<content_name>/remotion/`
 
-- `single`: `<project_dir>/video/<content_name>.mp4`
-- `multi`: `<project_dir>/video/<content_name>/<content_name>-part-001.mp4` (ordered series)
-- remotion workspace (kept by default): `<project_dir>/video/<content_name>/remotion/`
+Keep Remotion sources by default unless the user explicitly requests cleanup.
 
-Duration rules:
+Git hygiene (required):
 
-- `single`: honor target total duration.
-- `multi`: each clip should match user segment duration; final clip may be shorter for remainder.
+- create or update `<project_dir>/video/<content_name>/remotion/.gitignore`
+- do not remove user-defined ignore rules already in that file
+- ensure it includes at least these entries:
+  - `node_modules/`
+  - `.cache/`
+  - `dist/`
+  - `build/`
+  - `out/`
+  - `.DS_Store`
+  - `*.log`
 
 ## Output Contract
 
-Return absolute paths for:
+Return absolute paths for produced artifacts:
 
-- storyboard folder
-- full narration audio file
-- full subtitle SRT file
-- subtitle style config file
-- subtitle contrast report file
-- final rendered MP4 file (`single`) or ordered MP4 clip list (`multi`)
-- remotion workspace directory (preserved unless user requested cleanup)
-- segment manifest file (`multi` only)
+- plan markdown file
+- storyboard directory (if generated or used)
+- narration audio file (if generated or used)
+- subtitle SRT file (if generated or used)
+- final rendered MP4 (single) or ordered clip list (multi)
+- Remotion workspace directory
+- Remotion `.gitignore` file path
 
-Also report whether duration requirements are satisfied (`single`: total duration, `multi`: per-clip duration + remainder clip).
-Also report subtitle sync verification result (first/middle/last cue timing check against narration timeline).
-Also report subtitle readability verification result (contrast checks and fallback usage summary).
+Also report:
+
+- what assumptions were clarified through interactive questions
+- subtitle sync verification (first/middle/last cue spot check)

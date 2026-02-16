@@ -1,55 +1,57 @@
 # Video Production Skill
 
-A Codex skill for end-to-end text-to-video production. It supports both single long videos and multi-clip short-video outputs.
+A Codex skill for text-to-video production that follows user instructions and invokes only the needed dependency skills.
 
 ## Capabilities
 
-- Plans scene prompts from source text in narrative order.
-- Generates storyboard images with orientation-aware aspect ratio.
-- Produces full narration audio, timeline JSON, and SRT subtitles.
-- In multi-clip mode, splits full narration/subtitles by user-defined clip duration.
-- Composes and renders subtitle video(s) with Remotion best practices.
-- Preserves the Remotion project by default for future edits and re-rendering.
-- Enforces one unified adaptive subtitle strategy across all rendered videos.
-- Derives subtitle text color and depth from image color elements to keep captions readable.
-- Keeps subtitle timing aligned cue-by-cue with narration (no all-at-once captions).
+- Adapts the workflow to user-provided assets instead of forcing a fixed pipeline.
+- Calls storyboard generation only when visuals are missing.
+- Calls voice/subtitle generation only when audio or SRT is missing.
+- Uses Remotion best practices to compose and render final output.
+- Asks interactive clarifying questions when key information is missing (for example subtitle style).
+- Creates `<project_dir>/docs/plans/<YYYY-MM-DD>-<content_name>.md` from `references/plan-template.md` before generation and waits for user confirmation.
+- Uses square-bracket placeholders in the plan template and removes all placeholders/instructions after filling.
+- Defaults to single-video output unless the user explicitly requests multi-clip output.
+- Preserves the Remotion project by default for later edits.
+- Maintains Remotion `.gitignore` (including `node_modules/` and build/cache outputs) to keep git projects clean.
 
-## Required Dependency Skills
+## Dependency Skills
 
-1. `openai-text-to-image-storyboard`
-2. `docs-to-voice`
-3. `remotion-best-practices`
+- `openai-text-to-image-storyboard`
+- `docs-to-voice`
+- `remotion-best-practices`
 
-## Required Inputs
+## Typical Inputs
 
 - `project_dir`
-- source text (raw text or a text file)
+- source text (or existing assets)
 - `content_name`
-- orientation (`vertical` or `horizontal`)
-- delivery mode (`single` or `multi`)
-- target video duration (for `single`)
-- segment duration per clip (for `multi`)
+- orientation / resolution
+- subtitle style preferences
+- duration constraints (if needed for the requested output)
 
 ## Output Contract
 
-- Storyboard folder: `<project_dir>/pictures/<content_name>/`
-- Narration assets: `<project_dir>/audio/<content_name>/`
-- Subtitle style profile: `<project_dir>/video/<content_name>/subtitle-style.json`
-- Subtitle contrast report: `<project_dir>/video/<content_name>/subtitle-contrast-report.json`
-- Single mode video: `<project_dir>/video/<content_name>.mp4`
-- Multi mode videos: `<project_dir>/video/<content_name>/<content_name>-part-001.mp4` (ordered series)
-- Remotion workspace (kept by default): `<project_dir>/video/<content_name>/remotion/`
-- Multi mode manifest: `<project_dir>/video/<content_name>/segments.json`
+Return absolute paths for:
+
+- plan markdown file
+- storyboard directory (if used)
+- narration audio file (if used)
+- subtitle SRT file (if used)
+- final rendered MP4 (single) or ordered MP4 clip list (multi)
+- Remotion workspace directory
+- Remotion `.gitignore` file path
 
 ## Files
 
-- `SKILL.md` – workflow, dependency contract, and command examples.
-- `agents/openai.yaml` – display metadata and default prompt.
+- `SKILL.md` - workflow and execution rules
+- `agents/openai.yaml` - display metadata and default prompt
+- `references/plan-template.md` - pre-generation plan markdown template
 
 ## Quick Start
 
 In Codex, call the skill directly:
 
 ```text
-Use $video-production to convert text into one long video or multiple short narrated subtitle clips.
+Use $video-production to generate the video according to my instructions.
 ```

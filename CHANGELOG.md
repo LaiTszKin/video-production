@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.0] - 2026-02-16
+
+### Added
+- Require generating a pre-production plan markdown in `<project_dir>/docs/plans/` named with `<YYYY-MM-DD>-<content_name>.md`.
+- Define mandatory plan sections for `Video Transcripts` and `Images To Generate`.
+- Add `references/plan-template.md` as the canonical pre-generation plan template.
+- Add square-bracketed guidance and placeholders in the template, including explicit instruction to remove them after filling.
+- Add plan markdown path to the output contract.
+
+### Changed
+- Enforce explicit user confirmation of the plan document before running any generation or rendering step.
+- Require creating plan files from the reference template before generation.
+- Require replacing and removing all square-bracket placeholder/instruction text before sending the plan for user confirmation.
+- Update the agent default prompt and README to reflect the template-driven plan-first workflow.
+
 ## [0.1.3] - 2026-02-15
 
 ### Added
