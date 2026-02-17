@@ -1,6 +1,6 @@
 ---
 name: video-production
-description: Generate long-form videos (more than 10 minutes) by following user instructions and invoking related skills only when needed (`openai-text-to-image-storyboard`, `docs-to-voice`, `remotion-best-practices`, and `text-to-short-video` only for user-requested highlight clips). For text inputs, first extract a complete long-form story arc, split it into timed chapters, and require plan confirmation before generation.
+description: Generate long-form videos (more than 10 minutes) by following user instructions and invoking related skills only when needed (`openai-text-to-image-storyboard`, `docs-to-voice`, `remotion-best-practices`, `text-to-short-video`). For text inputs, extract a complete long-form story arc and the most important section, use `text-to-short-video` for that important section, and require plan confirmation before generation.
 ---
 
 # Video Production
@@ -9,7 +9,7 @@ description: Generate long-form videos (more than 10 minutes) by following user 
 
 1. Follow user instructions first. Do not force a fixed pipeline.
 2. For text-driven requests, use a long-form pipeline by default and target final output longer than 10 minutes.
-3. Before generation, turn source text into a coherent long-form structure (hook, chapter progression, and closing) unless the user already provides an exact structure.
+3. Before generation, turn source text into a coherent long-form structure (hook, chapter progression, and closing), and extract one important section for short-video generation unless the user already provides exact structure/excerpt.
 4. Role prompt policy for prompt generation:
    - always ensure `<project_dir>/pictures/<content_name>/roles.json` exists before any prompt generation
    - if a recurring role already has a defined prompt skeleton, reuse it without rewriting identity fields
@@ -18,7 +18,7 @@ description: Generate long-form videos (more than 10 minutes) by following user 
    - `openai-text-to-image-storyboard`: generate storyboard images when user did not provide usable visuals
    - `docs-to-voice`: generate narration/timeline/SRT when user did not provide audio or subtitles
    - `remotion-best-practices`: compose and render the final long-form output
-   - `text-to-short-video`: use only when the user explicitly asks for teaser/highlight clips
+   - `text-to-short-video`: generate the short clip from the important text section (required for text-driven jobs)
 6. Before any asset generation or rendering, create a plan markdown in `<project_dir>/docs/plans/` and wait for explicit user confirmation.
 7. Never ask the user whether to output a single video or multiple episodes.
    - If the user explicitly asks for episodes/parts, produce multi-episode output.
@@ -35,6 +35,7 @@ Prioritize asking these missing items:
 
 - target total duration (default recommendation: 10-15 minutes when user says long video)
 - chapter pacing (chapter count or average chapter duration)
+- lock the important section excerpt (if the user wants an exact excerpt for short-video generation)
 - subtitle style (font, size, color, stroke/background, position, max lines)
 - orientation/aspect ratio or exact resolution
 - narration language/voice tone (if narration must be generated)
@@ -52,6 +53,7 @@ Collect only what is needed for the requested job (not everything by default):
 - `content_name`
 - source script/text (unless the user provides complete audio + subtitles)
 - extracted long-form story arc with chapter breakdown (unless user provides an exact chapter structure)
+- extracted important section text for `text-to-short-video` (unless user provides an exact excerpt)
 - final transcript text used for narration/subtitles
 - existing prompt assets (`prompts.json`, character roster, or user-defined role prompts)
 - user-provided assets (images, audio, subtitles, branding)
@@ -66,20 +68,22 @@ Create a concise execution checklist:
 - what the user already provided
 - what still needs generation
 - whether to run the long-form text path or fallback asset path
+- which important section will be sent to `text-to-short-video`
 - which dependency skills will be called
 - what will be skipped
 
-### 2) Abstract long-form story arc and chapter map (text-first path)
+### 2) Abstract long-form story arc, chapter map, and important section (text-first path)
 
 When the request includes source text and the user did not lock a specific structure:
 
 - extract one self-contained long-form narrative arc suitable for a 10+ minute video
 - split content into chapters with clear transitions and duration targets
+- extract one high-impact important section suitable for short-video generation
 - preserve original wording for key hooks and turning points whenever possible
 - ensure narrative continuity (setup -> development -> escalation -> payoff/closing)
-- keep this chaptered script as the primary input for downstream generation
+- keep the chaptered script for long-form generation and the important section as `text-to-short-video` input
 
-If the user already provides an exact chapter structure, reuse it directly and skip abstraction.
+If the user already provides an exact chapter structure or important excerpt, reuse them directly and skip abstraction for those parts.
 
 ### 3) Resolve role prompt reuse and ensure `roles.json` exists before prompt generation
 
@@ -113,11 +117,13 @@ Before generating images/audio/subtitles/video:
 - use local date for `YYYY-MM-DD`; sanitize `content_name` for filename safety
 - include at least these sections:
   - `## Long-Form Structure`
+  - `## Important Section`
   - `## Timing Plan`
   - `## Video Transcripts`
   - `## Prompt Strategy`
   - `## Images To Generate`
 - in `Long-Form Structure`, include the extracted structure (or the user-locked structure)
+- in `Important Section`, include the extracted excerpt (or the user-locked excerpt) that will be sent to `text-to-short-video`
 - in `Timing Plan`, include chapter-level duration budget and total runtime
 - in `Prompt Strategy`, state which role prompts are reused vs newly defined and which JSON schema is used
 - in `Video Transcripts`, include the transcript content that will be used for narration/subtitles
@@ -131,12 +137,13 @@ Before generating images/audio/subtitles/video:
 
 After plan confirmation:
 
+- run `text-to-short-video` on the approved important section
 - generate missing storyboard assets chapter-by-chapter
 - generate narration/subtitles chapter-by-chapter when needed
 - compose into one continuous Remotion timeline by default
 - verify total rendered runtime is longer than 10 minutes unless the user explicitly requested shorter
 
-### 6) Optional short highlight clips (only when requested)
+### 6) Additional short highlight clips (only when requested)
 
 If the user explicitly asks for teaser/highlight outputs in addition to the long video:
 
@@ -174,13 +181,15 @@ Return absolute paths for produced artifacts:
 - storyboard directory (if generated or used)
 - narration audio file (if generated or used)
 - subtitle SRT file (if generated or used)
+- important-section short clip MP4 from `text-to-short-video` (text-driven jobs)
 - final long-form MP4 (single) or ordered episode list (multi)
-- optional highlight clips (if requested)
+- optional additional highlight clips (if requested)
 - Remotion workspace directory
 - Remotion `.gitignore` file path
 
 Also report:
 
+- important section summary (and whether it was user-locked or agent-abstracted)
 - extracted long-form structure summary (and whether it was user-locked or agent-abstracted)
 - chapter duration summary and total runtime
 - role prompt reuse summary (reused vs newly defined roles)

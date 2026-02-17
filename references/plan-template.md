@@ -17,6 +17,11 @@
 [Instruction: For text-driven long-form jobs, paste the extracted story arc and chapter outline used for the 10+ minute video. If the user locked the structure, paste that exact structure and mark it as user-locked. If this is not text-driven, write `None`.]
 [STORY_ARC_AND_CHAPTER_OUTLINE]
 
+## Important Section
+
+[Instruction: Paste the important section excerpt that will be sent to `text-to-short-video`. If the user locked the excerpt, paste it exactly and mark it as user-locked. If this is not text-driven, write `None`.]
+[IMPORTANT_SECTION_TEXT]
+
 ## Timing Plan
 
 [Instruction: Provide chapter-level duration planning and total runtime. For long-form jobs, total should be at least 10 minutes unless the user explicitly requested shorter.]

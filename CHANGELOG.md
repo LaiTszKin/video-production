@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.4.1] - 2026-02-17
+
+### Changed
+- Require using `text-to-short-video` for the important extracted section of text-driven jobs.
+- Update planning and prompt docs to include an explicit `Important Section` stage and plan section.
+
 ## [0.4.0] - 2026-02-17
 
 ### Added

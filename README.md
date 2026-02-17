@@ -7,11 +7,11 @@ A Codex skill for long-form video production (more than 10 minutes) that follows
 - Adapts the workflow to user-provided assets instead of forcing a fixed pipeline.
 - Uses a long-form chaptered workflow as the default text-to-video path.
 - Abstracts a complete long-form story arc and chapter map before generation (unless user locks a structure).
+- Uses `text-to-short-video` on the important section extracted from the source text.
 - Ensures `roles.json` exists first (create if missing), then reuses existing recurring-role prompts and only defines missing roles.
 - Calls storyboard generation only when visuals are missing.
 - Calls voice/subtitle generation only when audio or SRT is missing.
 - Uses Remotion best practices to compose and render final output.
-- Uses `text-to-short-video` only when the user explicitly requests teaser/highlight clips.
 - Asks interactive clarifying questions when key information is missing (for example subtitle style and target duration).
 - Creates `<project_dir>/docs/plans/<YYYY-MM-DD>-<content_name>.md` from `references/plan-template.md` before generation and waits for user confirmation.
 - Uses square-bracket placeholders in the plan template and removes all placeholders/instructions after filling.
@@ -24,7 +24,7 @@ A Codex skill for long-form video production (more than 10 minutes) that follows
 - `openai-text-to-image-storyboard`
 - `docs-to-voice`
 - `remotion-best-practices`
-- `text-to-short-video` (optional, only for requested highlights)
+- `text-to-short-video` (important section short clip; additional highlights are optional)
 
 ## Typical Inputs
 
@@ -32,6 +32,7 @@ A Codex skill for long-form video production (more than 10 minutes) that follows
 - source text (or existing assets)
 - `content_name`
 - existing role prompt source (optional `prompts.json` or role definitions)
+- important section excerpt (optional if user wants to lock the exact excerpt)
 - target duration (10+ minutes for long-form requests)
 - chapter pacing preference
 - orientation / resolution
@@ -47,8 +48,9 @@ Return absolute paths for:
 - storyboard directory (if used)
 - narration audio file (if used)
 - subtitle SRT file (if used)
+- important-section short clip MP4 from `text-to-short-video` (text-driven jobs)
 - final rendered long-form MP4 (single) or ordered MP4 episode list (multi)
-- highlight clip MP4s (if requested)
+- additional highlight clip MP4s (if requested)
 - Remotion workspace directory
 - Remotion `.gitignore` file path
 
