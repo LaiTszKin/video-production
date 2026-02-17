@@ -7,7 +7,7 @@ description: Generate long-form videos (more than 10 minutes) by following user 
 
 ## Core Rules
 
-1. Follow user instructions first. Do not force a fixed pipeline.
+1. Follow user instructions first. Use the required execution sequence below unless the user explicitly overrides it.
 2. For text-driven requests, use a long-form pipeline by default and target final output longer than 10 minutes.
 3. Before generation, turn source text into a coherent long-form structure (hook, chapter progression, and closing), then select climax scenes for short-video generation unless the user already locks them.
 4. Role prompt policy for prompt generation:
@@ -26,6 +26,16 @@ description: Generate long-form videos (more than 10 minutes) by following user 
    - Otherwise default to one full long video.
 9. Keep Remotion project files unless the user explicitly asks for cleanup.
 10. Keep git repositories clean by ensuring Remotion dependency/build/cache artifacts are ignored.
+
+## Required Execution Sequence
+
+When this skill is triggered, run the production stages in this order:
+
+1. Generate the production plan markdown and wait for explicit user confirmation before any generation.
+2. Check whether images are needed; generate missing images with `openai-text-to-image-storyboard` when needed.
+3. Generate climax-scene clips with `text-to-short-video`.
+4. Generate the narration/audio track with `docs-to-voice` when usable audio is not already provided.
+5. Use `remotion-best-practices` to combine the prepared assets (images, climax clips, audio/subtitles) into the final long-form video.
 
 ## Interactive Clarification (Required)
 
@@ -134,18 +144,18 @@ Before generating images/audio/subtitles/video:
 - return the absolute plan file path to the user and ask for explicit confirmation
 - do not run generation/render commands until user confirms the plan document
 
-### 5) Generate and integrate the long-form video (default path)
+### 5) Generate and integrate the long-form video in required order (default path)
 
 After plan confirmation:
 
+- check the approved image list from the plan and run `openai-text-to-image-storyboard` for missing storyboard assets
 - run `text-to-short-video` only for approved climax scenes
 - capture each climax short-clip output path and duration
 - integrate generated climax short clips into the final long-form timeline
   - default insertion: first climax clip starts at `00:00` unless user specifies another position
-- generate missing storyboard assets chapter-by-chapter
-- generate narration/subtitles chapter-by-chapter when needed
+- generate narration/subtitles chapter-by-chapter with `docs-to-voice` when needed
 - align chapter timing/subtitle offsets to account for inserted climax clips
-- compose one continuous Remotion timeline where all required climax short clips are included
+- compose one continuous Remotion timeline with `remotion-best-practices` where all required climax short clips are included
 - verify total rendered runtime is longer than 10 minutes unless the user explicitly requested shorter
 - verify final render contains the integrated climax short-clip segments at planned timecodes
 

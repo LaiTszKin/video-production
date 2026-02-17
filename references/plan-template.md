@@ -8,12 +8,15 @@
 
 ## Meta Data
 
-[Instruction: Fill only compact metadata used for production decisions.]
+[Instruction: Fill only compact metadata used for production decisions and stage sequencing.]
 - Date: [YYYY-MM-DD]
 - Content Name: [CONTENT_NAME]
 - Aspect Ratio / Resolution: [ASPECT_RATIO_OR_RESOLUTION]
 - Target Duration (minutes): [TARGET_DURATION_MINUTES]
 - Output Mode: [SINGLE_OR_MULTI_EPISODE]
+- Execution Sequence: [PLAN -> IMAGES -> CLIMAX_CLIPS -> AUDIO -> REMOTION]
+- Audio Track Plan: [GENERATE_WITH_DOCS_TO_VOICE_OR_REUSE_EXISTING]
+- Final Assembly Plan: [REMOTION_BEST_PRACTICES]
 - Remotion Workspace: [ABSOLUTE_PATH]
 
 ## Reference Text
