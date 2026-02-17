@@ -7,14 +7,15 @@ A Codex skill for long-form video production (more than 10 minutes) that follows
 - Adapts the workflow to user-provided assets instead of forcing a fixed pipeline.
 - Uses a long-form chaptered workflow as the default text-to-video path.
 - Abstracts a complete long-form story arc and chapter map before generation (unless user locks a structure).
-- Uses `text-to-short-video` on the important section extracted from the source text.
+- Uses `text-to-short-video` only for selected climax scenes extracted from the source text.
+- Integrates generated climax short clips into the final long-form video timeline (not short-clip-only delivery).
 - Ensures `roles.json` exists first (create if missing), then reuses existing recurring-role prompts and only defines missing roles.
 - Calls storyboard generation only when visuals are missing.
 - Calls voice/subtitle generation only when audio or SRT is missing.
 - Uses Remotion best practices to compose and render final output.
-- Asks interactive clarifying questions when key information is missing (for example subtitle style and target duration).
+- Asks interactive clarifying questions when key information is missing (for example subtitle style, target duration, climax scene lock, and short-clip integration position).
 - Creates `<project_dir>/docs/plans/<YYYY-MM-DD>-<content_name>.md` from `references/plan-template.md` before generation and waits for user confirmation.
-- Uses square-bracket placeholders in the plan template and removes all placeholders/instructions after filling.
+- Uses a compact plan template with only four sections: meta data, reference text, images needed, and climax scene/video generation.
 - Defaults to one long-form video unless the user explicitly requests multi-episode output.
 - Preserves the Remotion project by default for later edits.
 - Maintains Remotion `.gitignore` (including `node_modules/` and build/cache outputs) to keep git projects clean.
@@ -24,7 +25,7 @@ A Codex skill for long-form video production (more than 10 minutes) that follows
 - `openai-text-to-image-storyboard`
 - `docs-to-voice`
 - `remotion-best-practices`
-- `text-to-short-video` (important section short clip; additional highlights are optional)
+- `text-to-short-video` (used only for climax-scene short clips in text-driven jobs)
 
 ## Typical Inputs
 
@@ -32,7 +33,9 @@ A Codex skill for long-form video production (more than 10 minutes) that follows
 - source text (or existing assets)
 - `content_name`
 - existing role prompt source (optional `prompts.json` or role definitions)
-- important section excerpt (optional if user wants to lock the exact excerpt)
+- reference text sources (path/URL + scope notes; no full text embedding in plan)
+- climax scene selection (optional lock if user wants exact scenes)
+- climax short-clip integration position (default first clip at `00:00`)
 - target duration (10+ minutes for long-form requests)
 - chapter pacing preference
 - orientation / resolution
@@ -48,9 +51,9 @@ Return absolute paths for:
 - storyboard directory (if used)
 - narration audio file (if used)
 - subtitle SRT file (if used)
-- important-section short clip MP4 from `text-to-short-video` (text-driven jobs)
-- final rendered long-form MP4 (single) or ordered MP4 episode list (multi)
-- additional highlight clip MP4s (if requested)
+- climax-scene short clip MP4 list from `text-to-short-video` (text-driven jobs)
+- final rendered long-form MP4 with integrated climax short clips
+- additional climax clip MP4s (if requested)
 - Remotion workspace directory
 - Remotion `.gitignore` file path
 

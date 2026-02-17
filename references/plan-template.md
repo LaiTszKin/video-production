@@ -6,52 +6,46 @@
 
 # [VIDEO_TITLE]
 
+## Meta Data
+
+[Instruction: Fill only compact metadata used for production decisions.]
 - Date: [YYYY-MM-DD]
 - Content Name: [CONTENT_NAME]
 - Aspect Ratio / Resolution: [ASPECT_RATIO_OR_RESOLUTION]
 - Target Duration (minutes): [TARGET_DURATION_MINUTES]
 - Output Mode: [SINGLE_OR_MULTI_EPISODE]
+- Remotion Workspace: [ABSOLUTE_PATH]
 
-## Long-Form Structure
+## Reference Text
 
-[Instruction: For text-driven long-form jobs, paste the extracted story arc and chapter outline used for the 10+ minute video. If the user locked the structure, paste that exact structure and mark it as user-locked. If this is not text-driven, write `None`.]
-[STORY_ARC_AND_CHAPTER_OUTLINE]
+[Instruction: Do not paste full long text. Only reference source locations and short purpose notes because this skill targets long-form generation.]
+1. [SOURCE_ID] - [TYPE_FILE_OR_URL] - [ABSOLUTE_PATH_OR_URL]
+   - Scope: [CHAPTER_OR_RANGE]
+   - Purpose: [HOW_THIS_SOURCE_IS_USED]
+2. [SOURCE_ID] - [TYPE_FILE_OR_URL] - [ABSOLUTE_PATH_OR_URL]
+   - Scope: [CHAPTER_OR_RANGE]
+   - Purpose: [HOW_THIS_SOURCE_IS_USED]
 
-## Important Section
+## Images Needed To Be Generated
 
-[Instruction: Paste the important section excerpt that will be sent to `text-to-short-video`. If the user locked the excerpt, paste it exactly and mark it as user-locked. If this is not text-driven, write `None`.]
-[IMPORTANT_SECTION_TEXT]
-
-## Timing Plan
-
-[Instruction: Provide chapter-level duration planning and total runtime. For long-form jobs, total should be at least 10 minutes unless the user explicitly requested shorter.]
-1. [CHAPTER_ID_OR_ORDER] - [DURATION_MM_SS] - [CHAPTER_PURPOSE]
-2. [CHAPTER_ID_OR_ORDER] - [DURATION_MM_SS] - [CHAPTER_PURPOSE]
-3. [CHAPTER_ID_OR_ORDER] - [DURATION_MM_SS] - [CHAPTER_PURPOSE]
-- Total Planned Runtime: [TOTAL_DURATION]
-
-## Video Transcripts
-
-[Instruction: Paste the final transcript used for narration/subtitles. Keep exact wording if timing depends on it.]
-[TRANSCRIPT_TEXT]
-
-## Prompt Strategy
-
-[Instruction: Describe how role prompts are reused or newly defined, and which supported JSON prompt schema is used.]
-- Prompt Source Priority: [USER_PROVIDED_OR_EXISTING_FILE_OR_NEW]
-- Reused Roles: [ROLE_IDS_OR_NONE]
-- Newly Defined Roles: [ROLE_IDS_OR_NONE]
-- Prompt JSON Format: [FORMAT_A_OR_FORMAT_B]
-
-## Images To Generate
-
-[Instruction: List only images that still need generation. If no image generation is needed, write `None`.]
+[Instruction: List only images that still need generation. If none, write `None`.]
 1. [SCENE_ID_OR_ORDER] - [IMAGE_PROMPT_OR_DESCRIPTION]
-   - Usage: [INTENDED_USAGE]
+   - Usage: [INTENDED_USAGE_IN_LONG_VIDEO]
 2. [SCENE_ID_OR_ORDER] - [IMAGE_PROMPT_OR_DESCRIPTION]
-   - Usage: [INTENDED_USAGE]
+   - Usage: [INTENDED_USAGE_IN_LONG_VIDEO]
 
-## Notes
+## Climax Scenes Selected And Videos To Be Generated
 
-[Instruction: Record assumptions clarified with the user (for example subtitle style, voice tone, duration constraints).]
-[ASSUMPTIONS_AND_CONSTRAINTS]
+[Instruction: `text-to-short-video` is only for climax scenes. List selected climax scenes and their short-video generation plan.]
+1. [CLIMAX_SCENE_ID_OR_TITLE]
+   - Source Reference: [SOURCE_ID_AND_RANGE]
+   - Why Selected: [CLIMAX_REASON]
+   - Short Video Action: [GENERATE_OR_REUSE]
+   - Planned Output: [ABSOLUTE_MP4_PATH_OR_TBD]
+   - Integration Timecode In Final Long Video: [HH:MM:SS]
+2. [CLIMAX_SCENE_ID_OR_TITLE]
+   - Source Reference: [SOURCE_ID_AND_RANGE]
+   - Why Selected: [CLIMAX_REASON]
+   - Short Video Action: [GENERATE_OR_REUSE]
+   - Planned Output: [ABSOLUTE_MP4_PATH_OR_TBD]
+   - Integration Timecode In Final Long Video: [HH:MM:SS]
