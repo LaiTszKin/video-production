@@ -2,7 +2,7 @@
 
 Use this schema when preparing recurring-role prompts:
 
-- `<project_dir>/pictures/<content_name>/roles.json`
+- `<project_dir>/roles/roles.json`
 
 ## JSON Shape
 
@@ -37,3 +37,5 @@ Use this schema when preparing recurring-role prompts:
 ```json
 {"characters": []}
 ```
+
+Use this shared file so long-video workflows can reuse the same role definitions across runs within one project.

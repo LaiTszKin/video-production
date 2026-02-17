@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.6.0] - 2026-02-17
+
+### Added
+- Enforce `16:9` output as the default long-video aspect ratio (default `1920x1080`).
+- Require fresh storyboard image generation per run (no reuse of previously generated storyboard pictures).
+- Add an audience-retention animation requirement for long-form timelines and an animation planning section in the plan template.
+
+### Changed
+- Remove climax-short-clip planning/output requirements and replace them with chapter-level animation planning.
+- Update `SKILL.md`, `README.md`, `agents/openai.yaml`, and `references/plan-template.md` to match the new 16:9 + fresh-images + animation-first long-video workflow.
+
+### Removed
+- Remove `text-to-short-video` as a dependency from the default long-form workflow.
+- Remove related climax-scene short-video generation and integration steps.
+
 ## [0.5.0] - 2026-02-17
 
 ### Added

@@ -1,6 +1,6 @@
 # Video Production Plan
 
-[Instruction: Copy this template to `<project_dir>/docs/plans/<YYYY-MM-DD>-<content_name>.md` before any generation starts.]
+[Instruction: Copy this template to `<project_dir>/docs/long-video-plans/<YYYY-MM-DD>-<content_name>.md` before any generation starts.]
 [Instruction: Replace every square-bracket placeholder with real content.]
 [Instruction: After filling, delete all square-bracket instruction/placeholder text before showing the plan to the user for confirmation.]
 
@@ -11,10 +11,10 @@
 [Instruction: Fill only compact metadata used for production decisions and stage sequencing.]
 - Date: [YYYY-MM-DD]
 - Content Name: [CONTENT_NAME]
-- Aspect Ratio / Resolution: [ASPECT_RATIO_OR_RESOLUTION]
+- Aspect Ratio / Resolution: [16:9 / 1920x1080]
 - Target Duration (minutes): [TARGET_DURATION_MINUTES]
 - Output Mode: [SINGLE_OR_MULTI_EPISODE]
-- Execution Sequence: [PLAN -> IMAGES -> CLIMAX_CLIPS -> AUDIO -> REMOTION]
+- Execution Sequence: [PLAN -> IMAGES -> AUDIO -> REMOTION]
 - Audio Track Plan: [GENERATE_WITH_DOCS_TO_VOICE_OR_REUSE_EXISTING]
 - Final Assembly Plan: [REMOTION_BEST_PRACTICES]
 - Remotion Workspace: [ABSOLUTE_PATH]
@@ -31,24 +31,24 @@
 
 ## Images Needed To Be Generated
 
-[Instruction: List only images that still need generation. If none, write `None`.]
+[Instruction: List only images that still need generation for this run. Do not reuse previously generated storyboard images. If none, write `None`.]
 1. [SCENE_ID_OR_ORDER] - [IMAGE_PROMPT_OR_DESCRIPTION]
    - Usage: [INTENDED_USAGE_IN_LONG_VIDEO]
+   - Generation Policy: [FRESH_GENERATION]
 2. [SCENE_ID_OR_ORDER] - [IMAGE_PROMPT_OR_DESCRIPTION]
    - Usage: [INTENDED_USAGE_IN_LONG_VIDEO]
+   - Generation Policy: [FRESH_GENERATION]
 
-## Climax Scenes Selected And Videos To Be Generated
+## Animation Plan For Audience Retention
 
-[Instruction: `text-to-short-video` is only for climax scenes. List selected climax scenes and their short-video generation plan.]
-1. [CLIMAX_SCENE_ID_OR_TITLE]
-   - Source Reference: [SOURCE_ID_AND_RANGE]
-   - Why Selected: [CLIMAX_REASON]
-   - Short Video Action: [GENERATE_OR_REUSE]
-   - Planned Output: [ABSOLUTE_MP4_PATH_OR_TBD]
-   - Integration Timecode In Final Long Video: [HH:MM:SS]
-2. [CLIMAX_SCENE_ID_OR_TITLE]
-   - Source Reference: [SOURCE_ID_AND_RANGE]
-   - Why Selected: [CLIMAX_REASON]
-   - Short Video Action: [GENERATE_OR_REUSE]
-   - Planned Output: [ABSOLUTE_MP4_PATH_OR_TBD]
-   - Integration Timecode In Final Long Video: [HH:MM:SS]
+[Instruction: List chapter-level animation plans used in final Remotion assembly to avoid static visuals and keep audience focus.]
+1. [CHAPTER_ID_OR_RANGE]
+   - Animation Type: [PAN_ZOOM_OR_PARALLAX_OR_CAMERA_MOVE]
+   - Motion Notes: [HOW_MOTION_IS_APPLIED]
+   - Transition: [CUT_FADE_SLIDE_OR_OTHER]
+   - Focus Goal: [WHY_THIS_MAINTAINS_ATTENTION]
+2. [CHAPTER_ID_OR_RANGE]
+   - Animation Type: [PAN_ZOOM_OR_PARALLAX_OR_CAMERA_MOVE]
+   - Motion Notes: [HOW_MOTION_IS_APPLIED]
+   - Transition: [CUT_FADE_SLIDE_OR_OTHER]
+   - Focus Goal: [WHY_THIS_MAINTAINS_ATTENTION]
