@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.3.0] - 2026-02-17
+
+### Added
+- Add `text-to-short-video` as the default text-first production dependency.
+- Require extracting the most important text segment before short-video generation unless the user locks an exact segment.
+- Add recurring-role prompt policy: reuse existing role skeletons and create new JSON prompt entries only for undefined roles.
+- Add `Key Segment` and `Prompt Strategy` sections to `references/plan-template.md`.
+- Add `prompts.json` path to the output contract.
+
+### Changed
+- Update `SKILL.md`, `README.md`, and `agents/openai.yaml` to enforce text abstraction plus role-aware prompt reuse before generation.
+
 ## [0.2.0] - 2026-02-16
 
 ### Added

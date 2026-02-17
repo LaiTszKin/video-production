@@ -1,6 +1,6 @@
 ---
 name: video-production
-description: Generate videos by following user instructions and invoking related skills only when needed (`openai-text-to-image-storyboard`, `docs-to-voice`, `remotion-best-practices`). Use when users want text or existing assets turned into rendered videos, proactively ask interactive clarification questions whenever required information is missing (for example subtitle style), and require plan document confirmation before generation.
+description: Generate videos by following user instructions and invoking related skills only when needed (`text-to-short-video`, `openai-text-to-image-storyboard`, `docs-to-voice`, `remotion-best-practices`). For text inputs, first abstract the most important segment, then generate video through `text-to-short-video`; when recurring roles appear, reuse existing role prompts and generate JSON prompts in the defined format only for undefined roles. Ask interactive clarification questions for missing preferences and require plan confirmation before generation.
 ---
 
 # Video Production
@@ -8,16 +8,22 @@ description: Generate videos by following user instructions and invoking related
 ## Core Rules
 
 1. Follow user instructions first. Do not force a fixed pipeline.
-2. Call only relevant skills for missing work:
+2. For text-driven requests, use `text-to-short-video` as the default production path.
+3. Before calling `text-to-short-video`, extract the most important text segment and use that segment as the short-video source text unless the user already gave an exact segment.
+4. Role prompt policy for prompt generation:
+   - always ensure `<project_dir>/pictures/<content_name>/roles.json` exists before any prompt generation
+   - if a recurring role already has a defined prompt skeleton, reuse it without rewriting identity fields
+   - if a recurring role appears but is not defined, generate new role entries using the supported `prompts.json` schema
+5. Call only relevant fallback skills for missing work outside the text-to-short-video path:
    - `openai-text-to-image-storyboard`: generate storyboard images when user did not provide usable visuals.
    - `docs-to-voice`: generate narration/timeline/SRT when user did not provide audio or subtitles.
    - `remotion-best-practices`: compose and render the final video output.
-3. Before any asset generation or rendering, create a plan markdown in `<project_dir>/docs/plans/` and wait for explicit user confirmation.
-4. Never ask the user whether to output a single video or multiple clips.
+6. Before any asset generation or rendering, create a plan markdown in `<project_dir>/docs/plans/` and wait for explicit user confirmation.
+7. Never ask the user whether to output a single video or multiple clips.
    - If the user explicitly asks for clips/parts, produce multi-clip output.
    - Otherwise default to one full video.
-5. Keep Remotion project files unless the user explicitly asks for cleanup.
-6. Keep git repositories clean by ensuring Remotion dependency/build/cache artifacts are ignored.
+8. Keep Remotion project files unless the user explicitly asks for cleanup.
+9. Keep git repositories clean by ensuring Remotion dependency/build/cache artifacts are ignored.
 
 ## Interactive Clarification (Required)
 
@@ -31,6 +37,7 @@ Prioritize asking these missing items:
 - narration language/voice tone (if narration must be generated)
 - duration constraints (total duration, or clip duration only when the user requested clips)
 - visual style keywords (if storyboard images must be generated)
+- existing role prompt source (user-provided prompt file or existing `<project_dir>/pictures/<content_name>/prompts.json`) when recurring roles are expected
 - output location / filename rules when not obvious
 
 Ask only the minimum set required to unblock progress.
@@ -41,8 +48,10 @@ Collect only what is needed for the requested job (not everything by default):
 
 - `project_dir`
 - `content_name`
-- final transcript text used for narration/subtitles
 - source script/text (unless the user provides complete audio + subtitles)
+- extracted key segment text for short-video generation (unless user provides an exact segment)
+- final transcript text used for narration/subtitles
+- existing prompt assets (`prompts.json`, character roster, or user-defined role prompts)
 - user-provided assets (images, audio, subtitles, branding)
 - output requirements from user instructions
 
@@ -54,10 +63,43 @@ Create a concise execution checklist:
 
 - what the user already provided
 - what still needs generation
+- whether to run the text-first path (`text-to-short-video`) or fallback asset path
 - which dependency skills will be called
 - what will be skipped
 
-### 2) Create production plan markdown and wait for confirmation
+### 2) Abstract the most important text segment (text-first path)
+
+When the request includes source text and the user did not lock a specific excerpt:
+
+- extract one self-contained high-impact segment suitable for a 30-60 second short video
+- preserve original wording for key hooks and turning points whenever possible
+- ensure the extracted segment has narrative continuity (setup -> tension/change -> lingering curiosity)
+- keep this segment as the primary input passed into `text-to-short-video`
+
+If the user already provides the exact segment, reuse it directly and skip abstraction.
+
+### 3) Resolve role prompt reuse and ensure `roles.json` exists before prompt generation
+
+Before generating or updating `prompts.json`:
+
+1. detect recurring roles from the selected text segment
+2. set target role file path:
+   - `<project_dir>/pictures/<content_name>/roles.json`
+3. if `roles.json` exists, read it first and reuse matching roles
+4. if `roles.json` does not exist, create it first using `references/roles-json.md`
+   - include detected recurring roles when available
+   - if no recurring roles are detected, initialize with `{"characters": []}`
+5. load reusable prompt sources in this order:
+   - user-provided prompt file or role definitions
+   - existing `<project_dir>/pictures/<content_name>/prompts.json` (if present)
+6. apply role policy:
+   - defined role: reuse existing role skeleton following `references/roles-json.md`
+   - undefined role: add a new role entry following `references/roles-json.md`
+7. choose schema:
+   - use structured format with `characters` + `scenes` when recurring roles exist
+   - use simple list format only when no recurring roles need continuity
+
+### 4) Create production plan markdown and wait for confirmation
 
 Before generating images/audio/subtitles/video:
 
@@ -67,8 +109,12 @@ Before generating images/audio/subtitles/video:
 - copy the template into the plan file first, then fill it
 - use local date for `YYYY-MM-DD`; sanitize `content_name` for filename safety
 - include at least these sections:
+  - `## Key Segment`
   - `## Video Transcripts`
+  - `## Prompt Strategy`
   - `## Images To Generate`
+- in `Key Segment`, include the extracted segment (or the user-locked segment)
+- in `Prompt Strategy`, state which role prompts are reused vs newly defined and which JSON schema is used
 - in `Video Transcripts`, include the transcript content that will be used for narration/subtitles
 - in `Images To Generate`, list each image that still needs generation (scene id or order + prompt/description + intended usage)
 - replace all square-bracket placeholders with concrete content
@@ -76,52 +122,21 @@ Before generating images/audio/subtitles/video:
 - return the absolute plan file path to the user and ask for explicit confirmation
 - do not run generation/render commands until user confirms the plan document
 
-### 3) Generate missing visuals (if needed)
+### 5) Generate video via `text-to-short-video` (default text path)
 
-When visuals are missing, use `openai-text-to-image-storyboard`.
+Use `text-to-short-video` after plan confirmation when the source is text-driven:
 
-Aspect ratio mapping:
+- pass `project_dir`, `content_name`, extracted segment text, and user-requested size/aspect ratio
+- ensure `prompts.json` follows the defined schema and role reuse policy from step 3
+- let `text-to-short-video` handle storyboard generation and final short render flow
 
-- `vertical` -> `9:16`
-- `horizontal` -> `16:9`
+### 6) Fallback asset pipeline (only when text-to-short-video is not the right path)
 
-Command:
+Use this path when the user explicitly needs manual asset-level control or provides partial assets that require direct orchestration:
 
-```bash
-python /Users/tszkinlai/.codex/skills/openai-text-to-image-storyboard/scripts/generate_storyboard_images.py \
-  --project-dir <project_dir> \
-  --env-file /Users/tszkinlai/.codex/skills/openai-text-to-image-storyboard/.env \
-  --content-name "<content_name>" \
-  --prompts-file "<project_dir>/pictures/<content_name>/prompts.json" \
-  --aspect-ratio <9:16|16:9>
-```
-
-### 4) Generate missing narration/subtitles (if needed)
-
-When narration or subtitle assets are missing, use `docs-to-voice`.
-
-```bash
-python /Users/tszkinlai/.codex/skills/docs-to-voice/scripts/docs_to_voice.py \
-  --project-dir <project_dir> \
-  --project-name "<content_name>" \
-  --text "<source_text>"
-```
-
-Expected output under `<project_dir>/audio/<content_name>/`:
-
-- narration audio
-- timeline JSON
-- SRT subtitle file
-
-### 5) Compose and render video (`remotion-best-practices`)
-
-Always load and follow:
-
-- `rules/compositions.md`
-- `rules/audio.md`
-- `rules/subtitles.md`
-- `rules/import-srt-captions.md`
-- `rules/display-captions.md`
+- generate visuals via `openai-text-to-image-storyboard` only if needed
+- generate narration/subtitles via `docs-to-voice` only if needed
+- compose/render via `remotion-best-practices`
 
 Render rules:
 
@@ -131,7 +146,7 @@ Render rules:
 - `single` output: render one full MP4
 - `multi` output: only when the user requested clips; split by user rule and render one MP4 per clip
 
-### 6) Keep reusable project artifacts
+### 7) Keep reusable project artifacts
 
 Default workspace:
 
@@ -157,6 +172,8 @@ Git hygiene (required):
 Return absolute paths for produced artifacts:
 
 - plan markdown file
+- `roles.json` file used for role reuse/initialization
+- `prompts.json` file used for generation
 - storyboard directory (if generated or used)
 - narration audio file (if generated or used)
 - subtitle SRT file (if generated or used)
@@ -166,5 +183,7 @@ Return absolute paths for produced artifacts:
 
 Also report:
 
+- extracted key segment summary (and whether it was user-locked or agent-abstracted)
+- role prompt reuse summary (reused vs newly defined roles)
 - what assumptions were clarified through interactive questions
 - subtitle sync verification (first/middle/last cue spot check)

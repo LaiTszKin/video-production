@@ -5,6 +5,9 @@ A Codex skill for text-to-video production that follows user instructions and in
 ## Capabilities
 
 - Adapts the workflow to user-provided assets instead of forcing a fixed pipeline.
+- Uses `text-to-short-video` as the default text-to-video path.
+- Abstracts the most important text segment before short-video generation (unless user locks a segment).
+- Ensures `roles.json` exists first (create if missing), then reuses existing recurring-role prompts and only defines missing roles.
 - Calls storyboard generation only when visuals are missing.
 - Calls voice/subtitle generation only when audio or SRT is missing.
 - Uses Remotion best practices to compose and render final output.
@@ -17,6 +20,7 @@ A Codex skill for text-to-video production that follows user instructions and in
 
 ## Dependency Skills
 
+- `text-to-short-video`
 - `openai-text-to-image-storyboard`
 - `docs-to-voice`
 - `remotion-best-practices`
@@ -26,6 +30,7 @@ A Codex skill for text-to-video production that follows user instructions and in
 - `project_dir`
 - source text (or existing assets)
 - `content_name`
+- existing role prompt source (optional `prompts.json` or role definitions)
 - orientation / resolution
 - subtitle style preferences
 - duration constraints (if needed for the requested output)
@@ -35,6 +40,8 @@ A Codex skill for text-to-video production that follows user instructions and in
 Return absolute paths for:
 
 - plan markdown file
+- roles.json file (used for role reuse/initialization)
+- prompts.json file (if used)
 - storyboard directory (if used)
 - narration audio file (if used)
 - subtitle SRT file (if used)
@@ -47,6 +54,7 @@ Return absolute paths for:
 - `SKILL.md` - workflow and execution rules
 - `agents/openai.yaml` - display metadata and default prompt
 - `references/plan-template.md` - pre-generation plan markdown template
+- `references/roles-json.md` - recurring-role schema for `roles.json`
 
 ## Quick Start
 
