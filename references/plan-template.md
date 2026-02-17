@@ -9,12 +9,21 @@
 - Date: [YYYY-MM-DD]
 - Content Name: [CONTENT_NAME]
 - Aspect Ratio / Resolution: [ASPECT_RATIO_OR_RESOLUTION]
-- Output Mode: [SINGLE_OR_MULTI]
+- Target Duration (minutes): [TARGET_DURATION_MINUTES]
+- Output Mode: [SINGLE_OR_MULTI_EPISODE]
 
-## Key Segment
+## Long-Form Structure
 
-[Instruction: For text-driven jobs, paste the most important extracted segment used for the short video. If the user locked the segment, paste that exact segment and mark it as user-locked. If this is not text-driven, write `None`.]
-[KEY_SEGMENT_TEXT]
+[Instruction: For text-driven long-form jobs, paste the extracted story arc and chapter outline used for the 10+ minute video. If the user locked the structure, paste that exact structure and mark it as user-locked. If this is not text-driven, write `None`.]
+[STORY_ARC_AND_CHAPTER_OUTLINE]
+
+## Timing Plan
+
+[Instruction: Provide chapter-level duration planning and total runtime. For long-form jobs, total should be at least 10 minutes unless the user explicitly requested shorter.]
+1. [CHAPTER_ID_OR_ORDER] - [DURATION_MM_SS] - [CHAPTER_PURPOSE]
+2. [CHAPTER_ID_OR_ORDER] - [DURATION_MM_SS] - [CHAPTER_PURPOSE]
+3. [CHAPTER_ID_OR_ORDER] - [DURATION_MM_SS] - [CHAPTER_PURPOSE]
+- Total Planned Runtime: [TOTAL_DURATION]
 
 ## Video Transcripts
 

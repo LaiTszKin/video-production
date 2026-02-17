@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.4.0] - 2026-02-17
+
+### Added
+- Add long-form structure and timing-plan requirements to the plan template for 10+ minute productions.
+- Add optional highlight-clip flow that allows `text-to-short-video` only when explicitly requested.
+
+### Changed
+- Reposition the skill as a long-form video production workflow (default target: more than 10 minutes) instead of short-video-first behavior.
+- Replace key-segment-first short pipeline rules with chaptered long-form planning, timing, and rendering guidance in `SKILL.md`, `README.md`, and `agents/openai.yaml`.
+
 ## [0.3.0] - 2026-02-17
 
 ### Added
